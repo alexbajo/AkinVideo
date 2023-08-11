@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Video y Preguntas</title>
+  <!-- CSS de Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <!-- JS de jQuery y Bootstrap -->
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Aquí irá el contenido de la página -->
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item active" aria-current="page">Inicio</li>
+        </ol>
+      </nav>
+
+      <div class="row">
+        <div class="col-md-6">
+          <!-- Aquí irá el video -->
+          <video src="ruta_del_video.mp4" controls></video>
+        </div>
+        <div class="col-md-6">
+          <!-- Aquí irá la pregunta y respuestas -->
+          <div class="card">
+            <div class="card-header">Pregunta</div>
+            <div class="card-body">
+              <p>¿Cuál es la respuesta correcta?</p>
+              <div class="btn-group-vertical">
+                <button type="button" class="btn btn-secondary">Respuesta 1</button>
+                <button type="button" class="btn btn-secondary">Respuesta 2</button>
+                <button type="button" class="btn btn-secondary">Respuesta 3</button>
+                <button type="button" class="btn btn-secondary">Respuesta 4</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Cuando se hace clic en una respuesta
+    $('.btn-group-vertical').on('click', '.btn', function() {
+      var respuesta_id = $(this).data('id');
+      var siguiente_pregunta_id = $(this).data('siguiente_pregunta');
+      var respuesta_texto = $(this).text();
+      
+      // Guardar la respuesta en una cookie
+      document.cookie = "respuesta_" + siguiente_pregunta_id + "=" + respuesta_texto;
+
+      // Actualizar el breadcrumb
+      var breadcrumb = '<li class="breadcrumb-item"><a href="#">' + respuesta_texto + '</a></li>';
+      $('.breadcrumb').append(breadcrumb);
+
+      // Cargar la siguiente pregunta y respuestas por AJAX
+      $.get('pregunta.php', { id: siguiente_pregunta_id }, function(data) {
+        // Actualizar la pregunta y respuestas en la página
+        $('.card-header').text(data.pregunta);
+        var respuestas_html = '';
+        $.each(data.respuestas, function(index, respuesta) {
+          respuestas_html += '<button type="button" class="btn btn-secondary" data-id="' + respuesta.id + '" data-siguiente_pregunta="' + respuesta.siguiente_pregunta + '">' + respuesta.texto + '</button>';
+        });
+        $('.btn-group-vertical').html(respuestas_html);
+      }, 'json');
+    });
+    
+    // Cargar la primera pregunta y respuestas por AJAX
+    $.get('pregunta.php', { id: 1 }, function(data) {
+      // Actualizar la pregunta y respuestas en la página
+      $('.card-header').text(data.pregunta);
+      var respuestas_html = '';
+      $.each(data.respuestas, function(index, respuesta) {
+        respuestas_html += '<button type="button" class="btn btn-secondary" data-id="' + respuesta.id + '" data-siguiente_pregunta="' + respuesta.siguiente_pregunta + '">' + respuesta.texto + '</button>';
+      });
+      $('.btn-group-vertical').html(respuestas_html);
+    }, 'json');
+  </script>
+
+  <script>
+    // Cuando se hace clic en un elemento del breadcrumb
+    $('.breadcrumb').on('click', 'a', function() {
+      var respuesta_texto = $(this).text();
+      
+      // Buscar la cookie correspondiente a la respuesta
+      var cookie_name = "respuesta_" + $(this).index();
+      var cookie_value = getCookie(cookie_name);
+
+      // Si se encuentra la cookie
+      if (cookie_value != "") {
+        // Eliminar las cookies posteriores a esta
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i];
+          while (cookie.charAt(0) == ' ') {
+            cookie = cookie.substring(1);
+          }
+          if (cookie.indexOf("respuesta_") == 0 && $(this).index() < parseInt(cookie.substring(10))) {
+            document.cookie = cookie.substring(0, cookie.indexOf("=")) + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          }
+        }
+
+        // Cargar la pregunta y respuestas por AJAX
+        $.get('pregunta.php', { id: $(this).index() + 1 }, function(data) {
+          // Actualizar la pregunta y respuestas en la página
+          $('.card-header').text(data.pregunta);
+          var respuestas_html = '';
+          $.each(data.respuestas, function(index, respuesta) {
+            respuestas_html += '<button type="button" class="btn btn-secondary" data-id="' + respuesta.id + '" data-siguiente_pregunta="' + respuesta.siguiente_pregunta + '">' + respuesta.texto + '</button>';
+          });
+          $('.btn-group-vertical').html(respuestas_html);
+
+          // Seleccionar la respuesta correspondiente
+          $('.btn-group-vertical').find('.btn:contains("' + cookie_value + '")').addClass('active');
+        }, 'json');
+      }
+    });
+
+    // Función para obtener el valor de una cookie por su nombre
+    function getCookie(name) {
+      var cookie_value = "";
+      var cookie_array = document.cookie.split("; ");
+      for (var i = 0; i < cookie_array.length; i++) {
+        var cookie = cookie_array[i];
+        if (cookie.indexOf(name + "=") == 0) {
+          cookie_value = cookie.substring(name.length + 1);
+          break;
+        }
+      }
+      return decodeURIComponent(cookie_value);
+    }
+  </script>
+</body>
+</html>

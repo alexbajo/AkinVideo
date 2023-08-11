@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Video y pregunta con respuestas</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  </head>
+  <body>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">Inicio</li>
+      </ol>
+    </nav>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="embed-responsive embed-responsive-16by9">
+            <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/VIDEO_ID"></iframe>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h2>Pregunta:</h2>
+          <p class="pregunta">¿Cuál es la capital de Francia?</p>
+          <div class="btn-group-vertical" role="group" aria-label="Respuestas">
+            <button type="button" class="btn btn-primary respuesta" data-video="VIDEO_ID_1" data-pregunta="No es la capital de Francia">Madrid</button>
+            <button type="button" class="btn btn-primary respuesta" data-video="VIDEO_ID_2" data-pregunta="No es la capital de Francia">Londres</button>
+            <button type="button" class="btn btn-primary respuesta" data-video="VIDEO_ID_3" data-pregunta="Correcto!">París</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.respuesta').on('click', function() {
+          var videoId = $(this).data('video');
+          var pregunta = $(this).data('pregunta');
+          var breadcrumb = $('.breadcrumb');
+          var respuesta = $(this).text();
+          breadcrumb.append('<li class="breadcrumb-item">' + respuesta + '</li>');
+          $('.pregunta').text(pregunta);
+          $('iframe').attr('src', 'https://www.youtube.com/embed/' + videoId);
+        });
+
+        $('.breadcrumb').on('click', 'li', function() {
+          var index = $(this).index();
+          $(this).nextAll().remove();
+          $('.pregunta').text($(this).text() + ':');
+          $('button.respuesta:eq(' + index + ')').trigger('click');
+        });
+      });
+    </script>
+  </body>
+</html>
